@@ -57,6 +57,10 @@ mainloop:
 				set_active_cell(active_cell_x, active_cell_y-1)
 			case termbox.KeyArrowDown:
 				set_active_cell(active_cell_x, active_cell_y+1)
+			case termbox.KeyHome, termbox.KeyCtrlA:
+				set_active_cell(0, active_cell_y)
+			case termbox.KeyEnd, termbox.KeyCtrlE:
+				set_active_cell(len(sheet[0]), active_cell_y)
 			}
 		case termbox.EventResize:
 			render()

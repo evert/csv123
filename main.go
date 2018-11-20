@@ -7,6 +7,7 @@ import "encoding/csv"
 import "os"
 import "io"
 import "strconv"
+import "bufio"
 
 const column_width = 20
 const row_bar_width = 6
@@ -243,9 +244,16 @@ func set_active_cell(x, y int) {
 
 func read_file() {
 
-	reader, err := os.Open(os.Args[1])
-	if err != nil {
-		panic(err)
+	var reader io.Reader
+	if os.Args[1] == "-" {
+		reader = bufio.NewReader(os.Stdin)
+	} else {
+		r, err := os.Open(os.Args[1])
+		if err != nil {
+			panic(err)
+		}
+		reader = r
+
 	}
 
 	csv_reader := csv.NewReader(reader)

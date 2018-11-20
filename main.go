@@ -9,7 +9,13 @@ import "io"
 import "strconv"
 
 const column_width = 20
-const row_bar_width = 5
+const row_bar_width = 6
+
+var active_cell_x = 0
+var active_cell_y = 0
+
+var sheet_x_offset = 0
+var sheet_y_offset = 0
 
 type SheetData = [][]string
 
@@ -40,8 +46,17 @@ mainloop:
 
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
-			if ev.Key == termbox.KeyEsc {
+			switch ev.Key {
+			case termbox.KeyEsc:
 				break mainloop
+			case termbox.KeyArrowLeft:
+				set_active_cell(active_cell_x-1, active_cell_y)
+			case termbox.KeyArrowRight:
+				set_active_cell(active_cell_x+1, active_cell_y)
+			case termbox.KeyArrowUp:
+				set_active_cell(active_cell_x, active_cell_y-1)
+			case termbox.KeyArrowDown:
+				set_active_cell(active_cell_x, active_cell_y+1)
 			}
 		case termbox.EventResize:
 			render()
@@ -56,7 +71,7 @@ func render() {
 	render_rows()
 	render_columns()
 	render_sheet()
-	termbox.Sync()
+	termbox.Flush()
 
 }
 
@@ -65,7 +80,7 @@ func max_columns() int {
 	mx, _ := termbox.Size()
 
 	// How many columns can we fit?
-	return (mx - row_bar_width) / column_width
+	return (mx-row_bar_width)/column_width + 1
 
 }
 func max_rows() int {
@@ -77,12 +92,11 @@ func max_rows() int {
 
 func render_rows() {
 
-	termbox.SetCell(1, 1, '@', termbox.ColorBlue, termbox.ColorGreen)
 	rows := max_rows()
 	for y := 0; y < rows; y++ {
 
-		str := fmt.Sprintf("%4v ", y+1)
-		setCells(1, y+1, str, termbox.ColorBlack, termbox.ColorCyan)
+		str := fmt.Sprintf("%4v ", y+1+sheet_y_offset) + " "
+		setCells(1, y+2, str, termbox.ColorBlack, termbox.ColorCyan)
 
 	}
 
@@ -95,7 +109,7 @@ func render_columns() {
 
 	for x := 0; x < columns; x++ {
 
-		str := center(char_for_column(x), column_width)
+		str := center(char_for_column(x+sheet_x_offset), column_width)
 		setCells((x*column_width)+row_bar_width, 1, str, termbox.ColorBlack, termbox.ColorCyan)
 
 	}
@@ -109,16 +123,9 @@ func render_sheet() {
 
 	for y := 0; y < rows; y++ {
 
-		if y >= len(sheet) {
-			break
-		}
-
 		for x := 0; x < columns; x++ {
-			if x >= len(sheet[y]) {
-				break
-			}
 
-			render_sheet_cell(x, y, sheet[y][x])
+			render_cell(x, y)
 
 		}
 
@@ -126,7 +133,25 @@ func render_sheet() {
 
 }
 
-func render_sheet_cell(x, y int, value string) {
+func render_cell(x, y int) {
+
+	real_x := x + sheet_x_offset
+	real_y := y + sheet_y_offset
+
+	active := false
+	if real_x == active_cell_x && real_y == active_cell_y {
+		active = true
+	}
+	val := ""
+	if real_y < len(sheet) && real_x < len(sheet[real_y]) {
+		val = sheet[real_y][real_x]
+	}
+
+	render_sheet_cell(x, y, val, active)
+
+}
+
+func render_sheet_cell(x, y int, value string, active bool) {
 
 	if len(value) > column_width-2 {
 		value = value[0 : column_width-2]
@@ -139,12 +164,19 @@ func render_sheet_cell(x, y int, value string) {
 		// Left-justify
 		formatted_string = " " + value + strings.Repeat(" ", column_width-2-len(value)) + " "
 	}
+
+	fg := termbox.ColorDefault
+	bg := termbox.ColorDefault
+	if active {
+		fg = termbox.ColorBlack
+		bg = termbox.ColorBlue
+	}
 	setCells(
 		(x*column_width)+row_bar_width,
 		y+2,
 		formatted_string,
-		termbox.ColorDefault,
-		termbox.ColorDefault,
+		fg,
+		bg,
 	)
 
 }
@@ -155,6 +187,48 @@ func setCells(x, y int, str string, fg, bg termbox.Attribute) {
 
 		termbox.SetCell(x+off, y, rune(str[off]), fg, bg)
 
+	}
+
+}
+
+func set_active_cell(x, y int) {
+
+	columns := max_columns()
+	rows := max_rows()
+	if x < 0 {
+		x = 0
+	}
+	if y < 0 {
+		y = 0
+	}
+
+	prev_x := active_cell_x
+	prev_y := active_cell_y
+	active_cell_x = x
+	active_cell_y = y
+
+	full_render := false
+
+	if x < sheet_x_offset {
+		sheet_x_offset = x
+		full_render = true
+	} else if x > sheet_x_offset+(columns-2) {
+		sheet_x_offset = x - columns + 2
+		full_render = true
+	} else if y < sheet_y_offset {
+		sheet_y_offset = y
+		full_render = true
+	} else if y > sheet_y_offset+(rows-2) {
+		sheet_y_offset = y - rows + 2
+		full_render = true
+	}
+
+	if full_render {
+		render()
+	} else {
+		render_cell(prev_x-sheet_x_offset, prev_y-sheet_y_offset)
+		render_cell(x-sheet_x_offset, y-sheet_y_offset)
+		termbox.Flush()
 	}
 
 }

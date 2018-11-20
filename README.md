@@ -7,7 +7,7 @@ It's far from complete, but there's a screenshot:
 
 ![screenshot](screenshots/screenshot-0.1.png)
 
-Right now it's just a static view, but it does automatically re-render when
-terminal is re-sized.
+Right now it's a very simple viewer. You can browse around with the arrow
+keys, and the interface re-renders if the terminal is resized.
 
 To exit, hit `ESC`.

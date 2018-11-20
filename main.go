@@ -1,7 +1,6 @@
 package main
 
 import "github.com/nsf/termbox-go"
-import "time"
 import "fmt"
 import "strings"
 import "encoding/csv"
@@ -27,12 +26,28 @@ func main() {
 
 	termbox.Init()
 
+	setCells(0, 0, "csv x-x-x", termbox.ColorDefault, termbox.ColorDefault)
+	termbox.SetCell(4, 0, '1', termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
+	termbox.SetCell(6, 0, '2', termbox.ColorGreen|termbox.AttrBold, termbox.ColorDefault)
+	termbox.SetCell(8, 0, '3', termbox.ColorBlue|termbox.AttrBold, termbox.ColorDefault)
+
 	defer termbox.Close()
+
 	render()
 
-	termbox.Sync()
+mainloop:
+	for {
 
-	time.Sleep(time.Second * 2)
+		switch ev := termbox.PollEvent(); ev.Type {
+		case termbox.EventKey:
+			if ev.Key == termbox.KeyEsc {
+				break mainloop
+			}
+		case termbox.EventResize:
+			render()
+		}
+
+	}
 
 }
 
@@ -41,6 +56,7 @@ func render() {
 	render_rows()
 	render_columns()
 	render_sheet()
+	termbox.Sync()
 
 }
 

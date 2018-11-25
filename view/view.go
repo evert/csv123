@@ -32,19 +32,31 @@ func Close() {
 
 func Render() {
 
+	renderLogo()
+	renderInput()
 	renderRows()
 	renderColumns()
 	renderSheet()
+	renderInput()
 	termbox.Flush()
 
 }
 
 func renderLogo() {
 
-	setCells(0, 0, "csv x-x-x", termbox.ColorDefault, termbox.ColorDefault)
-	termbox.SetCell(4, 0, '1', termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
-	termbox.SetCell(6, 0, '2', termbox.ColorGreen|termbox.AttrBold, termbox.ColorDefault)
-	termbox.SetCell(8, 0, '3', termbox.ColorBlue|termbox.AttrBold, termbox.ColorDefault)
+	mx, _ := termbox.Size()
+	offset := mx - 10
+	setCells(offset, 0, "csv x-x-x", termbox.ColorDefault, termbox.ColorDefault)
+	termbox.SetCell(offset+4, 0, '1', termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
+	termbox.SetCell(offset+6, 0, '2', termbox.ColorGreen|termbox.AttrBold, termbox.ColorDefault)
+	termbox.SetCell(offset+8, 0, '3', termbox.ColorBlue|termbox.AttrBold, termbox.ColorDefault)
+
+}
+
+func renderInput() {
+
+	str := cellCoords() + ": " + sheet.getValue(activeCellY, activeCellX)
+	setCells(0, 0, str, termbox.ColorDefault, termbox.ColorDefault)
 
 }
 
@@ -100,10 +112,7 @@ func renderCell(x, y int) {
 	if real_x == activeCellX && real_y == activeCellY {
 		active = true
 	}
-	val := ""
-	if real_y < len(sheet) && real_x < len(sheet[real_y]) {
-		val = sheet[real_y][real_x]
-	}
+	val := sheet.getValue(real_x, real_y)
 
 	renderSheetCell(x, y, val, active)
 
@@ -164,6 +173,13 @@ func maxRows() int {
 
 	_, my := termbox.Size()
 	return my - 1
+
+}
+
+// Returns the active cell's coordinates as a string like A1
+func cellCoords() string {
+
+	return fmt.Sprintf("%v%v", charForColumn(activeCellX), activeCellY)
 
 }
 
@@ -238,6 +254,7 @@ func SetActiveCell(x, y int) {
 		full_render = true
 	}
 
+	renderInput()
 	if full_render {
 		Render()
 	} else {

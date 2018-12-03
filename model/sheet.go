@@ -5,12 +5,36 @@ import "os"
 import "io"
 import "bufio"
 
-type Sheet = [][]string
+type Sheet struct {
+	data [][]string
+}
+
+func NewSheet() Sheet {
+
+	s := Sheet{data: make([][]string, 0)}
+	return s
+
+}
+
+func (s Sheet) GetValue(x, y int) string {
+
+	if y < len(s.data) && x < len(s.data[y]) {
+		return s.data[y][x]
+	} else {
+		return ""
+	}
+
+}
+
+func (s Sheet) GetMaxX(y int) int {
+
+	return len(s.data[y])
+
+}
 
 func ReadFromFile(fileName string) Sheet {
 
-	var sheet Sheet
-	sheet = make(Sheet, 0)
+	s := NewSheet()
 
 	var reader io.Reader
 	if os.Args[1] == "-" {
@@ -34,8 +58,8 @@ func ReadFromFile(fileName string) Sheet {
 		if err != nil {
 			panic(err)
 		}
-		sheet = append(sheet, record)
+		s.data = append(s.data, record)
 	}
-	return sheet
+	return s
 
 }

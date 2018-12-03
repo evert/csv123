@@ -45,7 +45,7 @@ func Render() {
 func renderLogo() {
 
 	mx, _ := termbox.Size()
-	offset := mx - 10
+	offset := mx - 9
 	setCells(offset, 0, "csv x-x-x", termbox.ColorDefault, termbox.ColorDefault)
 	termbox.SetCell(offset+4, 0, '1', termbox.ColorRed|termbox.AttrBold, termbox.ColorDefault)
 	termbox.SetCell(offset+6, 0, '2', termbox.ColorGreen|termbox.AttrBold, termbox.ColorDefault)
@@ -55,7 +55,11 @@ func renderLogo() {
 
 func renderInput() {
 
-	str := cellCoords() + ": " + sheet.getValue(activeCellY, activeCellX)
+	mx, _ := termbox.Size()
+	str := fmt.Sprintf("%v:%-"+strconv.Itoa(mx-14)+"v",
+		cellCoords(),
+		sheet.GetValue(activeCellX, activeCellY),
+	)
 	setCells(0, 0, str, termbox.ColorDefault, termbox.ColorDefault)
 
 }
@@ -112,7 +116,7 @@ func renderCell(x, y int) {
 	if real_x == activeCellX && real_y == activeCellY {
 		active = true
 	}
-	val := sheet.getValue(real_x, real_y)
+	val := sheet.GetValue(real_x, real_y)
 
 	renderSheetCell(x, y, val, active)
 
@@ -179,7 +183,7 @@ func maxRows() int {
 // Returns the active cell's coordinates as a string like A1
 func cellCoords() string {
 
-	return fmt.Sprintf("%v%v", charForColumn(activeCellX), activeCellY)
+	return fmt.Sprintf("%v%v", charForColumn(activeCellX), activeCellY+1)
 
 }
 
@@ -204,14 +208,14 @@ func Move(x, y int) {
 
 }
 
-// Move to end of line
-func MoveEnd() {
+// Move to start of line
+func MoveHome() {
 	SetActiveCell(0, activeCellY)
 }
 
 // Move to end of line
-func MoveHome() {
-	SetActiveCell(len(sheet[0]), activeCellY)
+func MoveEnd() {
+	SetActiveCell(sheet.GetMaxX(activeCellY), activeCellY)
 }
 
 func PageDown() {

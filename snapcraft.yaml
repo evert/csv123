@@ -1,0 +1,16 @@
+name: csv123
+version: git
+summary: A command-line CSV viewer
+description: A simple command-line viewer for CSV files.
+confinement: devmode
+
+parts:
+  csv123:
+    plugin: go
+    go-importpath: github.com/evert/csv123
+    source: .
+    source-type: git
+
+apps:
+  csv123:
+    command: bin/csv123
